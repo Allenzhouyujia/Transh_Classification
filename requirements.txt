@@ -1,0 +1,37 @@
+# 核心深度学习框架
+torch>=1.12.0
+torchvision>=0.13.0
+torchaudio>=0.12.0
+
+# 图像处理和计算机视觉
+opencv-python>=4.5.0
+Pillow>=8.3.0
+scikit-image>=0.18.0
+
+# 数据处理和科学计算
+numpy>=1.21.0
+pandas>=1.3.0
+scikit-learn>=1.0.0
+
+# 可视化和绘图
+matplotlib>=3.4.0
+seaborn>=0.11.0
+
+# 进度条和用户界面
+tqdm>=4.62.0
+
+# 硬件通信
+pyserial>=3.5
+
+# 可选依赖 - 训练监控
+# tensorboard>=2.8.0
+# wandb>=0.12.0
+
+# 可选依赖 - 交互式开发
+# jupyter>=1.0.0
+# notebook>=6.4.0
+# ipywidgets>=7.6.0
+
+# 可选依赖 - 模型优化
+# onnx>=1.10.0
+# onnxruntime>=1.10.0 
