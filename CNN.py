@@ -33,22 +33,26 @@ matplotlib.use('TkAgg')
 class TransferLearningModel(nn.Module):
     """AI Model for Trash Classification"""
     
-    def __init__(self, num_classes=4, use_pretrained=False):
+    def __init__(self, num_classes=4, backbone='efficientnet_b0', use_pretrained=False):
         super(TransferLearningModel, self).__init__()
         
-        # Pre-trained EfficientNet backbone
-        self.model = models.efficientnet_b0(weights=None if not use_pretrained else 'DEFAULT')
-        
-        # Custom classifier for waste categories
-        num_features = self.model.classifier[1].in_features
-        self.model.classifier = nn.Sequential(
-            nn.Dropout(p=0.5, inplace=True),
-            nn.Linear(num_features, 512),
-            nn.BatchNorm1d(512),
-            nn.ReLU(inplace=True),
-            nn.Dropout(p=0.4),
-            nn.Linear(512, num_classes)
-        )
+        # Create model based on backbone
+        if backbone == 'resnet18':
+            self.model = models.resnet18(weights=None if not use_pretrained else 'DEFAULT')
+            self.model.fc = nn.Linear(self.model.fc.in_features, num_classes)
+        elif backbone == 'efficientnet_b0':
+            self.model = models.efficientnet_b0(weights=None if not use_pretrained else 'DEFAULT')
+            self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, num_classes)
+        elif backbone == 'efficientnet_b3':
+            self.model = models.efficientnet_b3(weights=None if not use_pretrained else 'DEFAULT')
+            self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, num_classes)
+        elif backbone == 'mobilenet_v2':
+            self.model = models.mobilenet_v2(weights=None if not use_pretrained else 'DEFAULT')
+            self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, num_classes)
+        else:
+            # Default to EfficientNet-B0
+            self.model = models.efficientnet_b0(weights=None if not use_pretrained else 'DEFAULT')
+            self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, num_classes)
     
     def forward(self, x):
         return self.model(x)
@@ -66,10 +70,10 @@ class SmartTrashClassifier:
         self.APP_NAME = "Smart Trash Classifier"
         self.VERSION = "1.0.0"
         
-        # Classification categories
-        self.class_names = ['General Waste', 'Organic Waste', 'Recyclables', 'Hazardous Waste']
+        # Classification categories - will be updated from model
+        self.class_names = ['Garbage', 'Organics', 'Recyclables', 'battery']  # Default, will be updated from model
         self.class_colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A']
-        self.hardware_commands = {'General Waste': '2', 'Organic Waste': '1', 'Recyclables': '3', 'Hazardous Waste': '4'}
+        self.hardware_commands = {'Garbage': '2', 'Organics': '1', 'Recyclables': '3', 'battery': '4'}
         
         # System configuration
         self.device = self.get_device()
@@ -292,10 +296,24 @@ class SmartTrashClassifier:
         try:
             # Search for model files
             model_files = [
+                'best_model_garbage_resnet18_adam_cross_entropy.pth',
+                'final_model_garbage_resnet18_adam_cross_entropy.pth',
+                'best_model_garbage_resnet18_adamw_cross_entropy.pth',
+                'final_model_garbage_resnet18_adamw_cross_entropy.pth',
+                'best_model_garbage_resnet18_sgd_cross_entropy.pth',
+                'final_model_garbage_resnet18_sgd_cross_entropy.pth',
                 'best_model_garbage_xception.pth',
                 'final_model_garbage_xception.pth',
+                'best_model_garbage_efficientnet_b0.pth',
+                'final_model_garbage_efficientnet_b0.pth',
+                'best_model_garbage_efficientnet_b3.pth',
+                'final_model_garbage_efficientnet_b3.pth',
                 'best_model_mobilenet_v2_adam_cross_entropy.pth',
-                'final_model_mobilenet_v2_adam_cross_entropy.pth'
+                'final_model_mobilenet_v2_adam_cross_entropy.pth',
+                'best_model_xception_pytorch.pth',
+                'final_model_garbage_xception_pytorch.pth',
+                'best_model_garbage_simplified_xception_pytorch.pth',
+                'final_model_garbage_simplified_xception_pytorch.pth'
             ]
             
             model_path = None
@@ -307,18 +325,104 @@ class SmartTrashClassifier:
             if not model_path:
                 raise FileNotFoundError("AI model file not found")
             
-            # Initialize and load model
-            self.model = TransferLearningModel(num_classes=len(self.class_names))
+            # Load checkpoint
             checkpoint = torch.load(model_path, map_location=self.device)
             
+            # Determine backbone from model path
+            if 'xception' in model_path.lower() and 'pytorch' in model_path.lower():
+                if 'simplified' in model_path.lower():
+                    backbone = 'simplified_xception'
+                else:
+                    backbone = 'xception'
+            elif 'xception' in model_path.lower():
+                backbone = 'efficientnet_b0'  # train_xception.py actually uses EfficientNet
+            elif 'efficientnet_b0' in model_path.lower():
+                backbone = 'efficientnet_b0'
+            elif 'efficientnet_b3' in model_path.lower():
+                backbone = 'efficientnet_b3'
+            elif 'mobilenet' in model_path.lower():
+                backbone = 'mobilenet_v2'
+            elif 'resnet18' in model_path.lower():
+                backbone = 'resnet18'
+            else:
+                backbone = checkpoint.get('backbone', 'resnet18')  # Fallback
+            
+            # Get class names from checkpoint or use default
+            if 'class_names' in checkpoint:
+                self.class_names = checkpoint['class_names']
+            else:
+                # Infer from model state dict
+                if 'model_state_dict' in checkpoint:
+                    state_dict = checkpoint['model_state_dict']
+                    # Find the classifier layer to determine num_classes
+                    for key in state_dict.keys():
+                        if 'classifier' in key or 'fc' in key:
+                            if 'weight' in key:
+                                num_classes = state_dict[key].shape[0]
+                                break
+                    else:
+                        num_classes = 4  # Default fallback
+                else:
+                    num_classes = 4  # Default fallback
+                
+                # Use default class names
+                self.class_names = ['Garbage', 'Organics', 'Recyclables', 'battery']
+            
+            # Update hardware commands based on class names
+            self.hardware_commands = {}
+            for i, class_name in enumerate(self.class_names):
+                if class_name == 'Garbage':
+                    self.hardware_commands[class_name] = '2'
+                elif class_name == 'Organics':
+                    self.hardware_commands[class_name] = '1'
+                elif class_name == 'Recyclables':
+                    self.hardware_commands[class_name] = '3'
+                elif class_name == 'battery':
+                    self.hardware_commands[class_name] = '4'
+                else:
+                    # Default mapping for unknown classes
+                    self.hardware_commands[class_name] = str(i + 1)
+            
+            # Create model based on backbone
+            if backbone in ['xception', 'simplified_xception']:
+                # These are custom models from pytorch_train.py
+                self.log(f"ERROR: Custom Xception models require Xception_test.py")
+                messagebox.showerror("Model Error", 
+                    f"Model {model_path} is a custom Xception model.\n"
+                    f"Please use Xception_test.py to load this model.")
+                return
+            
+            # Create torchvision model
+            if backbone == 'resnet18':
+                self.model = models.resnet18(weights=None)
+                self.model.fc = nn.Linear(self.model.fc.in_features, len(self.class_names))
+            elif backbone == 'efficientnet_b0':
+                self.model = models.efficientnet_b0(weights=None)
+                self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, len(self.class_names))
+            elif backbone == 'efficientnet_b3':
+                self.model = models.efficientnet_b3(weights=None)
+                self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, len(self.class_names))
+            elif backbone == 'mobilenet_v2':
+                self.model = models.mobilenet_v2(weights=None)
+                self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, len(self.class_names))
+            else:
+                raise ValueError(f"Unsupported backbone: {backbone}")
+            
+            # Load model state dict
             if 'model_state_dict' in checkpoint:
                 self.model.load_state_dict(checkpoint['model_state_dict'])
-                accuracy = checkpoint.get('test_accuracy', 'N/A')
+                accuracy = checkpoint.get('accuracy', checkpoint.get('test_accuracy', 'N/A'))
+                epoch = checkpoint.get('epoch', 'N/A')
                 self.log(f"AI model loaded: {model_path}")
+                self.log(f"Model architecture: {backbone}")
+                self.log(f"Classes: {self.class_names}")
                 self.log(f"Model accuracy: {accuracy}")
+                self.log(f"Training epoch: {epoch}")
             else:
                 self.model.load_state_dict(checkpoint)
                 self.log(f"AI model loaded: {model_path}")
+                self.log(f"Model architecture: {backbone}")
+                self.log(f"Classes: {self.class_names}")
             
             self.model.eval()
             self.model = self.model.to(self.device)
@@ -416,7 +520,13 @@ class SmartTrashClassifier:
     
     def analyze_image(self):
         """Analyze the current image using AI"""
-        if not self.current_image or not self.model:
+        if not self.current_image:
+            self.log("ERROR: No image loaded for analysis")
+            return
+        
+        if not self.model:
+            self.log("ERROR: AI model not loaded")
+            messagebox.showerror("Model Error", "AI model not loaded. Please restart the application.")
             return
         
         try:
@@ -455,6 +565,8 @@ class SmartTrashClassifier:
             
         except Exception as e:
             self.log(f"ERROR: Analysis failed - {e}")
+            import traceback
+            self.log(f"Traceback: {traceback.format_exc()}")
             messagebox.showerror("Analysis Error", f"Analysis failed:\n{e}")
     
     def display_analysis_results(self):
@@ -952,7 +1064,10 @@ class SmartTrashClassifier:
     
     def start_queue_processing(self):
         """Start processing the update queue"""
-        self.process_queue()
+        try:
+            self.process_queue()
+        except Exception as e:
+            print(f"Queue processing error: {e}")
     
     def process_queue(self):
         """Process updates from camera thread"""
@@ -977,8 +1092,12 @@ class SmartTrashClassifier:
         except queue.Empty:
             pass
         
-        # Schedule next check
-        self.root.after(50, self.process_queue)
+        # Schedule next check - use a safer method
+        try:
+            self.root.after(50, self.process_queue)
+        except tk.TclError:
+            # Window was destroyed, stop processing
+            pass
     
     def load_placeholder_image(self):
         """Load placeholder when no image is selected"""
@@ -995,8 +1114,12 @@ class SmartTrashClassifier:
     
     def _update_log(self, message):
         """Update the log display"""
-        self.log_text.insert(tk.END, message)
-        self.log_text.see(tk.END)
+        try:
+            self.log_text.insert(tk.END, message)
+            self.log_text.see(tk.END)
+        except tk.TclError:
+            # Widget was destroyed, ignore
+            pass
     
     def get_random_training_images(self, num_images=1):
         """Get random images from training dataset"""
@@ -1266,25 +1389,36 @@ class SmartTrashClassifier:
 
 def main():
     """Main application entry point"""
-    root = tk.Tk()
-    
-    # Set application icon and properties
-    root.iconname("Smart Trash Classifier")
-    
-    # Create and run application
-    app = SmartTrashClassifier(root)
-    
     try:
-        root.mainloop()
-    except KeyboardInterrupt:
-        print("Application terminated by user")
-    finally:
-        # Clean up resources
-        if hasattr(app, 'camera_active') and app.camera_active:
-            app.stop_camera()
-        if hasattr(app, 'serial_conn') and app.serial_conn and app.serial_conn.is_open:
-            app.serial_conn.close()
-        print("Smart Trash Classification System shutdown complete")
+        root = tk.Tk()
+        
+        # Set application icon and properties
+        root.iconname("Smart Trash Classifier")
+        
+        # Create and run application
+        app = SmartTrashClassifier(root)
+        
+        try:
+            root.mainloop()
+        except KeyboardInterrupt:
+            print("Application terminated by user")
+        except Exception as e:
+            print(f"Application error: {e}")
+        finally:
+            # Clean up resources
+            try:
+                if hasattr(app, 'camera_active') and app.camera_active:
+                    app.stop_camera()
+                if hasattr(app, 'serial_conn') and app.serial_conn and app.serial_conn.is_open:
+                    app.serial_conn.close()
+            except Exception as e:
+                print(f"Cleanup error: {e}")
+            print("Smart Trash Classification System shutdown complete")
+            
+    except Exception as e:
+        print(f"Failed to start application: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main() 

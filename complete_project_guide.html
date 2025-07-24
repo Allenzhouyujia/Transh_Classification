@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Project Guide: Intelligent Waste Classification System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 2.8em;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 4px solid #3498db;
+            padding-bottom: 20px;
+        }
+
+        h2 {
+            color: #34495e;
+            font-size: 2em;
+            margin-top: 50px;
+            margin-bottom: 25px;
+            border-left: 5px solid #3498db;
+            padding-left: 20px;
+        }
+
+        h3 {
+            color: #2c3e50;
+            font-size: 1.5em;
+            margin-top: 35px;
+            margin-bottom: 20px;
+        }
+
+        h4 {
+            color: #34495e;
+            font-size: 1.3em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        p {
+            margin-bottom: 18px;
+            text-align: justify;
+            font-size: 1.1em;
+        }
+
+        .highlight-box {
+            background-color: #ecf0f1;
+            border-left: 4px solid #3498db;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+
+        .code-block {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 25px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 25px 0;
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+
+        .data-structure {
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 25px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 25px 0;
+            font-size: 0.9em;
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background-color: white;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-table th,
+        .stats-table td {
+            border: 1px solid #ddd;
+            padding: 15px;
+            text-align: left;
+        }
+
+        .stats-table th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+
+        .stats-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .stats-table tr:hover {
+            background-color: #e8f4f8;
+        }
+
+        .chart-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 35px 0;
+            flex-wrap: wrap;
+        }
+
+        .chart {
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 15px;
+            min-width: 320px;
+            text-align: center;
+        }
+
+        .chart h4 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .chart-value {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #3498db;
+            margin: 15px 0;
+        }
+
+        .chart-label {
+            color: #7f8c8d;
+            font-size: 1em;
+        }
+
+        .key-points {
+            background-color: #e8f5e8;
+            border-left: 4px solid #27ae60;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+
+        .key-points h4 {
+            color: #27ae60;
+            margin-bottom: 20px;
+        }
+
+        .key-points ul {
+            margin-left: 25px;
+        }
+
+        .key-points li {
+            margin-bottom: 12px;
+            font-size: 1.05em;
+        }
+
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+
+        .warning-box h4 {
+            color: #856404;
+            margin-bottom: 20px;
+        }
+
+        .toc {
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 10px;
+        }
+
+        .toc h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+        }
+
+        .toc ul {
+            list-style-type: none;
+            margin-left: 0;
+        }
+
+        .toc li {
+            margin-bottom: 12px;
+            padding-left: 25px;
+            position: relative;
+            font-size: 1.1em;
+        }
+
+        .toc li:before {
+            content: "•";
+            color: #3498db;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            font-size: 1.2em;
+        }
+
+        .toc a {
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .toc a:hover {
+            color: #3498db;
+        }
+
+        .step-box {
+            background-color: #f0f8ff;
+            border: 2px solid #87ceeb;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 10px;
+        }
+
+        .step-box h4 {
+            color: #4682b4;
+            margin-bottom: 20px;
+        }
+
+        .command-box {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+
+        .goal-box {
+            background-color: #fff5ee;
+            border: 2px solid #ff6347;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 10px;
+        }
+
+        .goal-box h4 {
+            color: #ff4500;
+            margin-bottom: 20px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .feature-card h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .summary-box {
+            background-color: #e3f2fd;
+            border: 2px solid #2196f3;
+            padding: 30px;
+            margin: 35px 0;
+            border-radius: 10px;
+        }
+
+        .summary-box h3 {
+            color: #1976d2;
+            margin-bottom: 20px;
+        }
+
+        .summary-box ul {
+            margin-left: 25px;
+        }
+
+        .summary-box li {
+            margin-bottom: 15px;
+            font-size: 1.05em;
+        }
+
+        .gui-preview {
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .gui-preview h4 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2.2em;
+            }
+            
+            h2 {
+                font-size: 1.7em;
+            }
+            
+            .chart-container {
+                flex-direction: column;
+            }
+            
+            .chart {
+                min-width: auto;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Complete Project Guide: Intelligent Waste Classification System</h1>
+
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#project-overview">1. Project Overview</a></li>
+                <li><a href="#environment-setup">2. Environment Setup</a></li>
+                <li><a href="#dataset-preparation">3. Dataset Preparation</a></li>
+                <li><a href="#model-training">4. Model Training</a></li>
+                <li><a href="#model-evaluation">5. Model Evaluation</a></li>
+                <li><a href="#gui-application">6. GUI Application Development</a></li>
+                <li><a href="#deployment">7. Deployment and Testing</a></li>
+                <li><a href="#troubleshooting">8. Troubleshooting</a></li>
+            </ul>
+        </div>
+
+        <section id="project-overview">
+            <h2>1. Project Overview</h2>
+            
+            <p>This comprehensive guide walks you through building a complete intelligent waste classification system from scratch. The project demonstrates how to transform theoretical deep learning knowledge into a practical, real-world application that can help address environmental challenges.</p>
+
+            <div class="highlight-box">
+                <h4>Project Vision</h4>
+                <p>We will build a real-time waste classification system based on deep learning that can identify waste types through cameras in real-time and provide classification suggestions. This project integrates CNN model architectures, transfer learning strategies, model optimization techniques, and edge deployment solutions.</p>
+            </div>
+
+            <div class="goal-box">
+                <h4>System Design Goals</h4>
+                <ul>
+                    <li><strong>Functional Goals:</strong> Identify common recyclables, hazardous waste, wet waste, and dry waste with over 85% accuracy</li>
+                    <li><strong>Performance Goals:</strong> Single image inference time under 100ms, support for real-time video stream processing, memory usage under 500MB</li>
+                    <li><strong>Deployment Goals:</strong> Support multiple hardware platforms including standard PCs, edge computing devices, and high-performance mobile devices</li>
+                </ul>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🔧 Complete Workflow</h4>
+                    <p>From environment setup to GUI deployment</p>
+                </div>
+                <div class="feature-card">
+                    <h4>⚡ Real-time Processing</h4>
+                    <p>Camera-based live classification</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📊 Multiple Models</h4>
+                    <p>Support for various architectures</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🎯 Production Ready</h4>
+                    <p>Hardware integration capabilities</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="environment-setup">
+            <h2>2. Environment Setup</h2>
+
+            <h3>2.1 System Requirements</h3>
+            
+            <div class="key-points">
+                <h4>Hardware Requirements:</h4>
+                <ul>
+                    <li><strong>CPU:</strong> Intel i5/AMD Ryzen 5 or higher</li>
+                    <li><strong>Memory:</strong> 8GB or higher (16GB recommended)</li>
+                    <li><strong>Graphics:</strong> NVIDIA GPU (recommended) or Apple Silicon chip</li>
+                    <li><strong>Storage:</strong> 10GB available space</li>
+                </ul>
+            </div>
+
+            <div class="key-points">
+                <h4>Software Requirements:</h4>
+                <ul>
+                    <li><strong>Python:</strong> 3.8+ (3.12 recommended)</li>
+                    <li><strong>PyTorch:</strong> 1.12+</li>
+                    <li><strong>CUDA:</strong> 11.7+ (for NVIDIA GPU)</li>
+                    <li><strong>Operating System:</strong> Windows 10+, macOS 10.15+, or Linux</li>
+                </ul>
+            </div>
+
+            <h3>2.2 Python Environment Setup</h3>
+            
+            <div class="step-box">
+                <h4>Step 1: Create Virtual Environment</h4>
+                <div class="command-box">
+# Create Python 3.12 virtual environment
+python3.12 -m venv trash_classifier_env
+
+# Activate virtual environment
+source trash_classifier_env/bin/activate  # Linux/Mac
+# or
+trash_classifier_env\Scripts\activate     # Windows
+                </div>
+            </div>
+
+            <div class="step-box">
+                <h4>Step 2: Upgrade and Install Base Tools</h4>
+                <div class="command-box">
+# Upgrade pip to latest version
+pip install --upgrade pip
+
+# Install base tools
+pip install wheel setuptools
+                </div>
+            </div>
+
+            <h3>2.3 PyTorch Installation</h3>
+            
+            <div class="step-box">
+                <h4>For Apple Silicon (MPS Support):</h4>
+                <div class="command-box">
+# Install PyTorch with MPS support
+pip install torch torchvision torchaudio
+                </div>
+            </div>
+
+            <div class="step-box">
+                <h4>For NVIDIA GPU (CUDA Support):</h4>
+                <div class="command-box">
+# Install PyTorch with CUDA 11.8 support
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+                </div>
+            </div>
+
+            <div class="step-box">
+                <h4>For CPU Only:</h4>
+                <div class="command-box">
+# Install CPU-only PyTorch
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+                </div>
+            </div>
+
+            <h3>2.4 Install Additional Dependencies</h3>
+            
+            <div class="step-box">
+                <h4>Install Project Dependencies</h4>
+                <div class="command-box">
+# Install all required packages
+pip install -r requirements.txt
+                </div>
+            </div>
+
+            <div class="code-block">
+# Core deep learning framework
+torch>=1.12.0
+torchvision>=0.13.0
+torchaudio>=0.12.0
+
+# Image processing and computer vision
+opencv-python>=4.5.0
+Pillow>=8.3.0
+scikit-image>=0.18.0
+
+# Data processing and scientific computing
+numpy>=1.21.0
+pandas>=1.3.0
+scikit-learn>=1.0.0
+
+# Visualization and plotting
+matplotlib>=3.4.0
+seaborn>=0.11.0
+
+# Progress bars and user interface
+tqdm>=4.62.0
+
+# Hardware communication
+pyserial>=3.5
+            </div>
+
+            <h3>2.5 Verify Installation</h3>
+            
+            <div class="step-box">
+                <h4>Verification Commands</h4>
+                <div class="command-box">
+# Verify PyTorch installation
+python -c "import torch; print(f'PyTorch version: {torch.__version__}')"
+python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"
+python -c "import torch; print(f'MPS available: {torch.backends.mps.is_available()}')"
+
+# Verify other key dependencies
+python -c "import torchvision; print(f'TorchVision version: {torchvision.__version__}')"
+python -c "import cv2; print(f'OpenCV version: {cv2.__version__}')"
+python -c "import numpy; print(f'NumPy version: {numpy.__version__}')"
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <h4>Important Notes:</h4>
+                <ul>
+                    <li>Choose the appropriate PyTorch installation based on your hardware</li>
+                    <li>Ensure you have sufficient disk space for the dataset and models</li>
+                    <li>For GPU training, ensure you have the latest drivers installed</li>
+                    <li>Virtual environment isolation prevents dependency conflicts</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="dataset-preparation">
+            <h2>3. Dataset Preparation</h2>
+
+            <h3>3.1 Dataset Overview</h3>
+            
+            <p>Our garbage classification dataset represents a real-world application of computer vision in environmental sustainability. The dataset encompasses four distinct waste categories, each requiring precise classification for proper disposal and recycling processes.</p>
+
+            <div class="highlight-box">
+                <h4>Waste Categories:</h4>
+                <ul>
+                    <li><strong>Garbage (Non-recyclable waste):</strong> Items that cannot be recycled and must be disposed of in landfills</li>
+                    <li><strong>Organics (Organic waste):</strong> Biodegradable materials suitable for composting</li>
+                    <li><strong>Recyclables (Recyclable materials):</strong> Items that can be processed and reused</li>
+                    <li><strong>Battery (Hazardous waste):</strong> Electronic waste requiring special handling</li>
+                </ul>
+            </div>
+
+            <h3>3.2 Dataset Structure</h3>
+            
+            <p>The dataset follows a hierarchical folder structure that facilitates both human understanding and automated processing:</p>
+
+            <div class="data-structure">
+garbage_dataset/
+├── TRAIN/          # Training data partition
+│   ├── Garbage/    # Non-recyclable waste samples
+│   ├── Organics/   # Organic waste samples
+│   ├── Recyclables/# Recyclable material samples
+│   └── battery/    # Hazardous waste samples
+└── TEST/           # Testing data partition
+    ├── Garbage/
+    ├── Organics/
+    ├── Recyclables/
+    └── battery/
+            </div>
+
+            <div class="key-points">
+                <h4>Dataset Structure Principles:</h4>
+                <ul>
+                    <li><strong>Separation of Concerns:</strong> Training and testing data are clearly separated</li>
+                    <li><strong>Class-based Organization:</strong> Each category has its dedicated directory</li>
+                    <li><strong>Scalability:</strong> The structure can easily accommodate additional classes</li>
+                    <li><strong>Framework Compatibility:</strong> Compatible with major deep learning frameworks</li>
+                </ul>
+            </div>
+
+            <h3>3.3 Data Distribution Analysis</h3>
+            
+            <div class="chart-container">
+                <div class="chart">
+                    <h4>Training Set</h4>
+                    <div class="chart-value">13,167</div>
+                    <div class="chart-label">Total Samples</div>
+                </div>
+                <div class="chart">
+                    <h4>Testing Set</h4>
+                    <div class="chart-value">~6,432</div>
+                    <div class="chart-label">Total Samples</div>
+                </div>
+                <div class="chart">
+                    <h4>Split Ratio</h4>
+                    <div class="chart-value">67% / 33%</div>
+                    <div class="chart-label">Train / Test</div>
+                </div>
+            </div>
+
+            <h4>Training Set Class Distribution:</h4>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Samples</th>
+                        <th>Percentage</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Garbage</td>
+                        <td>6,399</td>
+                        <td>48.6%</td>
+                        <td>Non-recyclable waste</td>
+                    </tr>
+                    <tr>
+                        <td>Recyclables</td>
+                        <td>4,468</td>
+                        <td>33.9%</td>
+                        <td>Recyclable materials</td>
+                    </tr>
+                    <tr>
+                        <td>Battery</td>
+                        <td>1,512</td>
+                        <td>11.5%</td>
+                        <td>Hazardous waste</td>
+                    </tr>
+                    <tr>
+                        <td>Organics</td>
+                        <td>788</td>
+                        <td>6.0%</td>
+                        <td>Organic waste</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="warning-box">
+                <h4>Class Imbalance Challenge:</h4>
+                <p>The dataset reveals significant class imbalance, with Garbage having approximately 8 times more samples than Organics. This imbalance requires special handling during training to ensure fair model performance across all classes.</p>
+            </div>
+        </section>
+
+        <section id="model-training">
+            <h2>4. Model Training</h2>
+
+            <h3>4.1 Training Strategy Overview</h3>
+            
+            <p>The project provides multiple training strategies to accommodate different use cases, hardware constraints, and performance requirements. Each strategy is optimized for specific scenarios.</p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🚀 Basic Training</h4>
+                    <p>Quick start for beginners</p>
+                </div>
+                <div class="feature-card">
+                    <h4>⚡ Quick Training</h4>
+                    <p>Fast validation and testing</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🎯 High-Quality Training</h4>
+                    <p>Best accuracy for production</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📱 Mobile Training</h4>
+                    <p>Optimized for edge devices</p>
+                </div>
+            </div>
+
+            <h3>4.2 Basic Training</h3>
+            
+            <div class="step-box">
+                <h4>Beginner-Friendly Training</h4>
+                <p>Start with basic training to understand the process and verify your setup:</p>
+                <div class="command-box">
+python train_garbage.py --dataset_path garbage_dataset
+                </div>
+                <p><strong>Use Case:</strong> First-time users, environment verification, quick testing</p>
+            </div>
+
+            <h3>4.3 High-Quality Training</h3>
+            
+            <div class="step-box">
+                <h4>Production-Ready Training</h4>
+                <p>Use EfficientNet-B3 with advanced techniques for best results:</p>
+                <div class="command-box">
+python train_garbage.py --dataset_path garbage_dataset --backbone efficientnet_b3 --batch_size 32 --num_epochs 50 --optimizer adamw --learning_rate 0.001 --weight_decay 1e-4 --loss_fn label_smoothing --smoothing 0.1 --lr_scheduler cosine --use_mixup --use_cutmix --balance_samples --early_stopping 10
+                </div>
+                <p><strong>Features:</strong> Advanced augmentation, class balancing, early stopping</p>
+            </div>
+
+            <h3>4.4 Quick Training for Testing</h3>
+            
+            <div class="step-box">
+                <h4>Rapid Development Training</h4>
+                <p>Use ResNet18 for quick iteration and testing:</p>
+                <div class="command-box">
+python train_garbage.py --dataset_path garbage_dataset --backbone resnet18 --batch_size 16 --num_epochs 5 --num_workers 2
+                </div>
+                <p><strong>Use Case:</strong> Rapid prototyping, code testing, quick validation</p>
+            </div>
+
+            <h3>4.5 High-Performance Training</h3>
+            
+            <div class="step-box">
+                <h4>GPU-Optimized Training</h4>
+                <p>Leverage GPU power with ResNet50 and mixed precision:</p>
+                <div class="command-box">
+python train_garbage.py --dataset_path garbage_dataset --backbone resnet50 --batch_size 64 --num_epochs 50 --use_amp --optimizer adamw --use_mixup --balance_samples
+                </div>
+                <p><strong>Features:</strong> Mixed precision training, larger batch size, GPU optimization</p>
+            </div>
+
+            <h3>4.6 Mobile-Optimized Training</h3>
+            
+            <div class="step-box">
+                <h4>Edge Device Training</h4>
+                <p>Train MobileNet-V2 for mobile and edge deployment:</p>
+                <div class="command-box">
+python train_garbage.py --dataset_path garbage_dataset --backbone mobilenet_v2 --batch_size 32 --num_epochs 30 --img_size 224 --optimizer adamw
+                </div>
+                <p><strong>Use Case:</strong> Mobile applications, edge computing, resource-constrained devices</p>
+            </div>
+
+            <h3>4.7 Maximum Accuracy Training</h3>
+            
+            <div class="step-box">
+                <h4>Research-Grade Training</h4>
+                <p>Ultimate accuracy with extended training and advanced techniques:</p>
+                <div class="command-box">
+python train_garbage.py --dataset_path garbage_dataset --backbone efficientnet_b3 --batch_size 16 --num_epochs 100 --optimizer adamw --learning_rate 0.0001 --weight_decay 1e-4 --loss_fn label_smoothing --smoothing 0.1 --lr_scheduler cosine --use_mixup --use_cutmix --balance_samples --early_stopping 15 --gradient_accumulation 2
+                </div>
+                <p><strong>Features:</strong> Extended training, gradient accumulation, fine-tuned hyperparameters</p>
+            </div>
+
+            <h3>4.8 Training Monitoring</h3>
+            
+            <div class="key-points">
+                <h4>Key Metrics to Monitor:</h4>
+                <ul>
+                    <li><strong>Training Loss:</strong> Should decrease over time</li>
+                    <li><strong>Validation Loss:</strong> Should decrease but not overfit</li>
+                    <li><strong>Accuracy:</strong> Should increase toward target of 85%+</li>
+                    <li><strong>Learning Rate:</strong> Should adapt based on scheduler</li>
+                    <li><strong>Class-wise Performance:</strong> Monitor per-class accuracy</li>
+                </ul>
+            </div>
+
+            <div class="warning-box">
+                <h4>Training Tips:</h4>
+                <ul>
+                    <li>Start with basic training to verify your setup</li>
+                    <li>Use appropriate batch size for your hardware</li>
+                    <li>Monitor GPU memory usage during training</li>
+                    <li>Save checkpoints regularly to resume training if needed</li>
+                    <li>Use early stopping to prevent overfitting</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="model-evaluation">
+            <h2>5. Model Evaluation</h2>
+
+            <h3>5.1 Training Results Analysis</h3>
+            
+            <p>After training, the system automatically generates comprehensive evaluation metrics and visualizations to assess model performance.</p>
+
+            <div class="highlight-box">
+                <h4>Generated Files:</h4>
+                <ul>
+                    <li><strong>Model Checkpoints:</strong> Best and final model weights</li>
+                    <li><strong>Training Plots:</strong> Loss and accuracy curves</li>
+                    <li><strong>Performance Metrics:</strong> Detailed accuracy statistics</li>
+                    <li><strong>Confusion Matrix:</strong> Per-class performance analysis</li>
+                </ul>
+            </div>
+
+            <h3>5.2 Model Performance Metrics</h3>
+            
+            <div class="key-points">
+                <h4>Evaluation Criteria:</h4>
+                <ul>
+                    <li><strong>Overall Accuracy:</strong> Target >85% for production use</li>
+                    <li><strong>Per-class Accuracy:</strong> Balanced performance across all classes</li>
+                    <li><strong>Inference Speed:</strong> <100ms per image for real-time use</li>
+                    <li><strong>Memory Usage:</strong> <500MB for edge deployment</li>
+                    <li><strong>Model Size:</strong> Optimized for target platform</li>
+                </ul>
+            </div>
+
+            <h3>5.3 Model Selection Strategy</h3>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🎯 Production Use</h4>
+                    <p>Choose highest accuracy model</p>
+                </div>
+                <div class="feature-card">
+                    <h4>⚡ Real-time Applications</h4>
+                    <p>Balance accuracy and speed</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📱 Mobile Deployment</h4>
+                    <p>Use MobileNet-V2 models</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔬 Research Applications</h4>
+                    <p>Maximum accuracy models</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="gui-application">
+            <h2>6. GUI Application Development</h2>
+
+            <h3>6.1 GUI Overview</h3>
+            
+            <p>The Smart Trash Classification System includes a comprehensive GUI application that provides multiple interfaces for waste classification, from simple image upload to real-time camera processing.</p>
+
+            <div class="gui-preview">
+                <h4>GUI Features</h4>
+                <ul>
+                    <li><strong>Image Upload:</strong> Drag-and-drop or file browser interface</li>
+                    <li><strong>Real-time Camera:</strong> Live video stream classification</li>
+                    <li><strong>Photo Mode:</strong> Single-shot camera capture</li>
+                    <li><strong>Random Testing:</strong> Test with dataset samples</li>
+                    <li><strong>Hardware Integration:</strong> Serial communication for sorting</li>
+                    <li><strong>Result Visualization:</strong> Confidence charts and predictions</li>
+                </ul>
+            </div>
+
+            <h3>6.2 GUI Architecture</h3>
+            
+            <div class="code-block">
+class SmartTrashClassifier:
+    """Main Application Class for Smart Trash Classification System"""
+    
+    def __init__(self, root):
+        # Application configuration
+        self.APP_NAME = "Smart Trash Classifier"
+        self.VERSION = "1.0.0"
+        
+        # Classification categories
+        self.class_names = ['General Waste', 'Organic Waste', 'Recyclables', 'Hazardous Waste']
+        self.class_colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A']
+        
+        # System configuration
+        self.device = self.get_device()
+        self.model = None
+        self.serial_conn = None
+            </div>
+
+            <h3>6.3 Running the GUI Application</h3>
+            
+            <div class="step-box">
+                <h4>Launch GUI Application</h4>
+                <div class="command-box">
+# Run the GUI application
+python trash_classification_gui_complete.py
+                </div>
+                <p><strong>Requirements:</strong> Trained model file must be available</p>
+            </div>
+
+            <h3>6.4 GUI Features in Detail</h3>
+            
+            <h4>6.4.1 Image Upload and Analysis</h4>
+            <div class="key-points">
+                <ul>
+                    <li><strong>Supported Formats:</strong> JPG, JPEG, PNG, BMP</li>
+                    <li><strong>Drag-and-Drop:</strong> Intuitive file handling</li>
+                    <li><strong>Batch Processing:</strong> Multiple image analysis</li>
+                    <li><strong>Result Display:</strong> Confidence scores and class predictions</li>
+                </ul>
+            </div>
+
+            <h4>6.4.2 Real-time Camera Processing</h4>
+            <div class="key-points">
+                <ul>
+                    <li><strong>Live Video Stream:</strong> Real-time classification</li>
+                    <li><strong>Prediction Stability:</strong> Reduces false positives</li>
+                    <li><strong>Auto-sorting:</strong> Automatic hardware control</li>
+                    <li><strong>Performance Monitoring:</strong> FPS and accuracy tracking</li>
+                </ul>
+            </div>
+
+            <h4>6.4.3 Hardware Integration</h4>
+            <div class="key-points">
+                <ul>
+                    <li><strong>Serial Communication:</strong> Arduino/ESP32 integration</li>
+                    <li><strong>Automatic Sorting:</strong> Hardware control commands</li>
+                    <li><strong>Manual Override:</strong> User control options</li>
+                    <li><strong>Status Monitoring:</strong> Hardware connection status</li>
+                </ul>
+            </div>
+
+            <h3>6.5 GUI Customization</h3>
+            
+            <div class="step-box">
+                <h4>Customizing the GUI</h4>
+                <p>Modify configuration in <code>trash_classification_gui_complete.py</code>:</p>
+                <div class="code-block">
+# Modify dataset path
+self.dataset_path = "your_dataset"
+
+# Modify class names
+self.class_names = ['Class1', 'Class2', 'Class3', 'Class4']
+
+# Modify class colors
+self.class_colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A']
+                </div>
+            </div>
+        </section>
+
+        <section id="deployment">
+            <h2>7. Deployment and Testing</h2>
+
+            <h3>7.1 Deployment Options</h3>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🖥️ Desktop Application</h4>
+                    <p>Standard PC deployment</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📱 Mobile Application</h4>
+                    <p>Smartphone deployment</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔧 Edge Device</h4>
+                    <p>IoT and embedded systems</p>
+                </div>
+                <div class="feature-card">
+                    <h4>☁️ Cloud Service</h4>
+                    <p>Web-based deployment</p>
+                </div>
+            </div>
+
+            <h3>7.2 Desktop Deployment</h3>
+            
+            <div class="step-box">
+                <h4>Desktop Application Setup</h4>
+                <div class="command-box">
+# Install PyInstaller for packaging
+pip install pyinstaller
+
+# Create executable
+pyinstaller --onefile --windowed trash_classification_gui_complete.py
+
+# The executable will be in dist/ folder
+                </div>
+            </div>
+
+            <h3>7.3 Mobile Deployment</h3>
+            
+            <div class="step-box">
+                <h4>Mobile Application Development</h4>
+                <p>For mobile deployment, use the MobileNet-V2 model and consider:</p>
+                <ul>
+                    <li>Model quantization for size reduction</li>
+                    <li>TensorFlow Lite conversion</li>
+                    <li>Platform-specific optimizations</li>
+                    <li>Battery usage optimization</li>
+                </ul>
+            </div>
+
+            <h3>7.4 Hardware Integration</h3>
+            
+            <div class="key-points">
+                <h4>Hardware Requirements:</h4>
+                <ul>
+                    <li><strong>Microcontroller:</strong> Arduino, ESP32, or Raspberry Pi</li>
+                    <li><strong>Actuators:</strong> Servo motors or stepper motors</li>
+                    <li><strong>Sensors:</strong> Camera module (USB or CSI)</li>
+                    <li><strong>Communication:</strong> USB or wireless connection</li>
+                </ul>
+            </div>
+
+            <h3>7.5 Testing and Validation</h3>
+            
+            <div class="step-box">
+                <h4>Testing Protocol</h4>
+                <ul>
+                    <li><strong>Unit Testing:</strong> Individual component testing</li>
+                    <li><strong>Integration Testing:</strong> End-to-end workflow testing</li>
+                    <li><strong>Performance Testing:</strong> Speed and accuracy validation</li>
+                    <li><strong>User Testing:</strong> Real-world usage scenarios</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="troubleshooting">
+            <h2>8. Troubleshooting</h2>
+
+            <h3>8.1 Common Issues and Solutions</h3>
+            
+            <div class="warning-box">
+                <h4>Training Issues:</h4>
+                <ul>
+                    <li><strong>Out of Memory:</strong> Reduce batch size or use gradient accumulation</li>
+                    <li><strong>Slow Training:</strong> Enable mixed precision or use GPU</li>
+                    <li><strong>Poor Accuracy:</strong> Check data quality and class balance</li>
+                    <li><strong>Overfitting:</strong> Increase regularization or reduce model complexity</li>
+                </ul>
+            </div>
+
+            <div class="warning-box">
+                <h4>GUI Issues:</h4>
+                <ul>
+                    <li><strong>Camera Not Working:</strong> Check camera permissions and drivers</li>
+                    <li><strong>Model Loading Error:</strong> Verify model file path and format</li>
+                    <li><strong>Hardware Connection:</strong> Check serial port and baud rate</li>
+                    <li><strong>Performance Issues:</strong> Optimize image size and model complexity</li>
+                </ul>
+            </div>
+
+            <h3>8.2 Performance Optimization</h3>
+            
+            <div class="key-points">
+                <h4>Optimization Strategies:</h4>
+                <ul>
+                    <li><strong>Model Quantization:</strong> Reduce model size and speed up inference</li>
+                    <li><strong>Batch Processing:</strong> Process multiple images simultaneously</li>
+                    <li><strong>Memory Management:</strong> Optimize data loading and processing</li>
+                    <li><strong>Hardware Acceleration:</strong> Utilize GPU/MPS for faster processing</li>
+                </ul>
+            </div>
+
+            <h3>8.3 Getting Help</h3>
+            
+            <div class="highlight-box">
+                <h4>Support Resources:</h4>
+                <ul>
+                    <li><strong>Documentation:</strong> Check README files for detailed instructions</li>
+                    <li><strong>GitHub Issues:</strong> Report bugs and request features</li>
+                    <li><strong>Community Forums:</strong> Seek help from the community</li>
+                    <li><strong>Log Files:</strong> Check application logs for error details</li>
+                </ul>
+            </div>
+        </section>
+
+        <div class="summary-box">
+            <h3>Project Summary</h3>
+            <p>This comprehensive guide has walked you through building a complete intelligent waste classification system from scratch. Key achievements include:</p>
+            
+            <ul>
+                <li><strong>Complete Workflow:</strong> From environment setup to GUI deployment</li>
+                <li><strong>Multiple Training Strategies:</strong> Catering to different use cases and hardware</li>
+                <li><strong>Real-world Application:</strong> Practical implementation with hardware integration</li>
+                <li><strong>Production Readiness:</strong> Optimized for deployment in various environments</li>
+                <li><strong>Comprehensive Documentation:</strong> Detailed guides for every step of the process</li>
+            </ul>
+
+            <p>The intelligent waste classification system demonstrates how computer vision and deep learning can address real-world environmental challenges while providing a complete learning experience in AI application development.</p>
+        </div>
+
+        <div style="margin-top: 60px; padding-top: 30px; border-top: 3px solid #3498db; text-align: center; color: #7f8c8d;">
+            <p><strong>Complete Project Guide: Intelligent Waste Classification System</strong></p>
+            <p>From Theory to Practice - A Comprehensive Deep Learning Application</p>
+            <p style="margin-top: 20px; font-size: 0.9em;">© 2024 - All rights reserved</p>
+        </div>
+    </div>
+</body>
+</html> 

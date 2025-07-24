@@ -186,7 +186,7 @@ def main():
     if args.device == 'auto':
         if torch.cuda.is_available():
             device = torch.device('cuda')
-        elif hasattr(torch, 'has_mps') and torch.has_mps and torch.backends.mps.is_available():
+        elif torch.backends.mps.is_built() and torch.backends.mps.is_available():
             device = torch.device('mps')  # M1/M2 Mac的GPU加速
         else:
             device = torch.device('cpu')
@@ -275,14 +275,7 @@ def main():
     print(f"Classes: {class_names}")
 
     # Load model based on specified backbone - for speed optimization
-    backbone_args = {'pretrained': True}
-    if args.backbone.startswith('efficientnet') or args.backbone == 'mobilenet_v2':
-        # Newer torchvision versions use weights parameter instead of pretrained
-        try:
-            del backbone_args['pretrained']
-            backbone_args['weights'] = 'IMAGENET1K_V1'
-        except:
-            pass  # Fallback to pretrained if this fails
+    backbone_args = {'weights': 'IMAGENET1K_V1'}
     
     # Fast backbone loading
     if args.backbone == 'resnet18':
@@ -347,7 +340,8 @@ def main():
     elif args.lr_scheduler == 'cosine':
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.num_epochs)
     elif args.lr_scheduler == 'reduce_on_plateau':
-        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=5, verbose=True)
+        # Remove verbose parameter for compatibility with newer PyTorch versions
+        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=5)
     else:  # 'none'
         scheduler = None
 

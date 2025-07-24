@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 6: Hands-On Project - Intelligent Waste Classification System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #e74c3c;
+            padding-bottom: 20px;
+        }
+
+        h2 {
+            color: #34495e;
+            font-size: 1.8em;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-left: 4px solid #e74c3c;
+            padding-left: 15px;
+        }
+
+        h3 {
+            color: #2c3e50;
+            font-size: 1.4em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        h4 {
+            color: #34495e;
+            font-size: 1.2em;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .highlight-box {
+            background-color: #ecf0f1;
+            border-left: 4px solid #e74c3c;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .code-block {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+
+        .data-structure {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-table th,
+        .stats-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .stats-table th {
+            background-color: #e74c3c;
+            color: white;
+            font-weight: bold;
+        }
+
+        .stats-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .stats-table tr:hover {
+            background-color: #ffeaea;
+        }
+
+        .chart-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .chart {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px;
+            min-width: 300px;
+            text-align: center;
+        }
+
+        .chart h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .chart-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #e74c3c;
+            margin: 10px 0;
+        }
+
+        .chart-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .key-points {
+            background-color: #e8f5e8;
+            border-left: 4px solid #27ae60;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .key-points h4 {
+            color: #27ae60;
+            margin-bottom: 15px;
+        }
+
+        .key-points ul {
+            margin-left: 20px;
+        }
+
+        .key-points li {
+            margin-bottom: 8px;
+        }
+
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .warning-box h4 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .toc {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .toc h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .toc ul {
+            list-style-type: none;
+            margin-left: 0;
+        }
+
+        .toc li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .toc li:before {
+            content: "•";
+            color: #e74c3c;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .toc a {
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .toc a:hover {
+            color: #e74c3c;
+        }
+
+        .summary-box {
+            background-color: #e3f2fd;
+            border: 1px solid #2196f3;
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+
+        .summary-box h3 {
+            color: #1976d2;
+            margin-bottom: 15px;
+        }
+
+        .summary-box ul {
+            margin-left: 20px;
+        }
+
+        .summary-box li {
+            margin-bottom: 10px;
+        }
+
+        .step-box {
+            background-color: #f0f8ff;
+            border: 1px solid #87ceeb;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .step-box h4 {
+            color: #4682b4;
+            margin-bottom: 15px;
+        }
+
+        .command-box {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+
+        .goal-box {
+            background-color: #fff5ee;
+            border: 1px solid #ff6347;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .goal-box h4 {
+            color: #ff4500;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            h2 {
+                font-size: 1.5em;
+            }
+            
+            .chart-container {
+                flex-direction: column;
+            }
+            
+            .chart {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chapter 6: Hands-On Project - Intelligent Waste Classification System</h1>
+
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#project-overview">6.1 Project Overview</a></li>
+                <li><a href="#system-goals">6.2 System Design Goals</a></li>
+                <li><a href="#dataset-overview">6.3 Dataset Overview</a></li>
+                <li><a href="#data-distribution">6.4 Training and Testing Data Distribution</a></li>
+                <li><a href="#environment-setup">6.5 Environment Setup</a></li>
+                <li><a href="#model-training">6.6 Model Training</a></li>
+                <li><a href="#practical-implementation">6.7 Practical Implementation</a></li>
+            </ul>
+        </div>
+
+        <section id="project-overview">
+            <h2>6.1 Project Overview</h2>
+            
+            <p>In today's world with growing environmental awareness, waste classification has become every citizen's responsibility. However, complex classification rules and similar item appearances make accurate classification challenging. Traditional waste classification relies on manual identification, which is not only inefficient but also prone to errors.</p>
+
+            <div class="highlight-box">
+                <p><strong>Project Vision:</strong> We will build a real-time waste classification system based on deep learning that can identify waste types through cameras in real-time and provide classification suggestions. This project will integrate all the technologies we've learned: CNN model architectures, transfer learning strategies, model optimization techniques, and edge deployment solutions.</p>
+            </div>
+
+            <h3>6.1.1 Environmental Impact</h3>
+            
+            <p>The importance of proper waste classification cannot be overstated in our current environmental context. With landfills reaching capacity and recycling facilities requiring precise sorting, automated waste classification systems represent a crucial step toward sustainable waste management practices.</p>
+
+            <div class="key-points">
+                <h4>Environmental Benefits:</h4>
+                <ul>
+                    <li>Increased recycling rates through accurate classification</li>
+                    <li>Reduced contamination in recycling streams</li>
+                    <li>Optimized waste processing efficiency</li>
+                    <li>Support for circular economy initiatives</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="system-goals">
+            <h2>6.2 System Design Goals</h2>
+
+            <div class="goal-box">
+                <h4>Functional Goals</h4>
+                <p>Identify common recyclables, hazardous waste, wet waste, and dry waste with <strong>over 85% accuracy</strong>.</p>
+            </div>
+
+            <div class="goal-box">
+                <h4>Performance Goals</h4>
+                <ul>
+                    <li>Single image inference time under <strong>100ms</strong></li>
+                    <li>Support for real-time video stream processing</li>
+                    <li>Memory usage under <strong>500MB</strong></li>
+                </ul>
+            </div>
+
+            <div class="goal-box">
+                <h4>Deployment Goals</h4>
+                <p>Support multiple hardware platforms including standard PCs, edge computing devices, and high-performance mobile devices.</p>
+            </div>
+
+            <div class="highlight-box">
+                <p><strong>Project Significance:</strong> This project will demonstrate how to transform theoretical knowledge into practical applications, how to find the optimal balance between accuracy and efficiency, and how to build a complete AI product. Let us begin this practical journey from algorithms to applications.</p>
+            </div>
+        </section>
+
+        <section id="dataset-overview">
+            <h2>6.3 Dataset Overview</h2>
+
+            <p>Our garbage classification dataset represents a real-world application of computer vision in environmental sustainability. The dataset encompasses four distinct waste categories, each requiring precise classification for proper disposal and recycling processes:</p>
+
+            <div class="highlight-box">
+                <ul>
+                    <li><strong>Garbage (Non-recyclable waste)</strong>: Items that cannot be recycled and must be disposed of in landfills</li>
+                    <li><strong>Organics (Organic waste)</strong>: Biodegradable materials suitable for composting</li>
+                    <li><strong>Recyclables (Recyclable materials)</strong>: Items that can be processed and reused</li>
+                    <li><strong>Battery (Hazardous waste)</strong>: Electronic waste requiring special handling</li>
+                </ul>
+            </div>
+
+            <p>This classification system aligns with modern waste management practices and environmental regulations, making it a practical and relevant application of computer vision technology.</p>
+
+            <h3>6.3.1 Dataset Structure</h3>
+            
+            <p>First you need to download the dataset and code from github:</p>
+
+            <div class="data-structure">
+garbage_dataset/
+├── TRAIN/          # Training data
+│   ├── Garbage/
+│   ├── Organics/
+│   ├── Recyclables/
+│   └── battery/
+└── TEST/           # Testing data
+    ├── Garbage/
+    ├── Organics/
+    ├── Recyclables/
+    └── battery/
+            </div>
+
+            <p>This is a garbage classification dataset with 4 categories:</p>
+            <ul>
+                <li><strong>Garbage</strong></li>
+                <li><strong>Organics</strong></li>
+                <li><strong>Recyclables</strong></li>
+                <li><strong>Battery</strong></li>
+            </ul>
+
+            <p>This structure embodies several important principles:</p>
+
+            <div class="key-points">
+                <ul>
+                    <li><strong>Separation of Concerns</strong>: Training and testing data are clearly separated</li>
+                    <li><strong>Class-based Organization</strong>: Each category has its dedicated directory</li>
+                    <li><strong>Scalability</strong>: The structure can easily accommodate additional classes</li>
+                    <li><strong>Framework Compatibility</strong>: Compatible with major deep learning frameworks</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="data-distribution">
+            <h2>6.4 Training and Testing Data Distribution</h2>
+
+            <h3>6.4.1 Data Split Strategy</h3>
+            
+            <p>The division of data into training and testing sets is a fundamental concept in machine learning. This separation serves multiple critical purposes:</p>
+
+            <div class="highlight-box">
+                <ul>
+                    <li><strong>Preventing Overfitting</strong>: Testing on unseen data provides unbiased performance evaluation</li>
+                    <li><strong>Generalization Assessment</strong>: Measures how well the model performs on new, unseen samples</li>
+                    <li><strong>Model Validation</strong>: Ensures the model's reliability in real-world applications</li>
+                </ul>
+            </div>
+
+            <h3>6.4.2 Quantitative Analysis</h3>
+            
+            <p>Our garbage classification dataset exhibits the following distribution:</p>
+
+            <div class="chart-container">
+                <div class="chart">
+                    <h4>Training Set</h4>
+                    <div class="chart-value">13,167</div>
+                    <div class="chart-label">Total Samples</div>
+                </div>
+                <div class="chart">
+                    <h4>Testing Set</h4>
+                    <div class="chart-value">~6,432</div>
+                    <div class="chart-label">Total Samples</div>
+                </div>
+                <div class="chart">
+                    <h4>Split Ratio</h4>
+                    <div class="chart-value">67% / 33%</div>
+                    <div class="chart-label">Train / Test</div>
+                </div>
+            </div>
+
+            <h4>Training Set Statistics:</h4>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Samples</th>
+                        <th>Percentage</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Garbage</td>
+                        <td>6,399</td>
+                        <td>48.6%</td>
+                        <td>Non-recyclable waste</td>
+                    </tr>
+                    <tr>
+                        <td>Recyclables</td>
+                        <td>4,468</td>
+                        <td>33.9%</td>
+                        <td>Recyclable materials</td>
+                    </tr>
+                    <tr>
+                        <td>Battery</td>
+                        <td>1,512</td>
+                        <td>11.5%</td>
+                        <td>Hazardous waste</td>
+                    </tr>
+                    <tr>
+                        <td>Organics</td>
+                        <td>788</td>
+                        <td>6.0%</td>
+                        <td>Organic waste</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Testing Set Statistics:</h4>
+            <ul>
+                <li><strong>Total samples</strong>: ~6,432</li>
+                <li><strong>Split ratio</strong>: Approximately 67% training, 33% testing</li>
+            </ul>
+        </section>
+
+        <section id="environment-setup">
+            <h2>6.5 Environment Setup</h2>
+
+            <div class="step-box">
+                <h4>Step 1: Create Python Virtual Environment</h4>
+                <div class="command-box">
+# 创建Python 3.12虚拟环境
+python3.12 -m venv trash_classifier_env
+
+# 激活虚拟环境
+source trash_classifier_env/bin/activate
+                </div>
+            </div>
+
+            <div class="step-box">
+                <h4>Step 2: Upgrade and Install Base Tools</h4>
+                <div class="command-box">
+# 升级pip到最新版本
+pip install --upgrade pip
+
+# 安装基础工具
+pip install wheel setuptools
+                </div>
+            </div>
+
+            <div class="step-box">
+                <h4>Step 3: Install PyTorch (Choose Based on Your System)</h4>
+                
+                <h4>For Apple Silicon (MPS Support):</h4>
+                <div class="command-box">
+# 安装支持MPS的PyTorch
+pip install torch torchvision torchaudio
+                </div>
+
+                <h4>For NVIDIA GPU (CUDA Support):</h4>
+                <div class="command-box">
+# 安装支持CUDA的PyTorch (CUDA 11.8)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+                </div>
+            </div>
+
+            <div class="step-box">
+                <h4>Step 4: Install Additional Dependencies</h4>
+                <div class="command-box">
+# 安装requirements.txt中的依赖
+pip install -r requirements.txt
+# Or
+pip3 install -r requirements.txt
+                </div>
+            </div>
+
+            <div class="step-box">
+                <h4>Step 5: Verify Installation</h4>
+                <div class="command-box">
+# 验证PyTorch安装
+python -c "import torch; print(f'PyTorch version: {torch.__version__}')"
+python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"
+python -c "import torch; print(f'MPS available: {torch.backends.mps.is_available()}')"
+
+# 验证其他关键依赖
+python -c "import torchvision; print(f'TorchVision version: {torchvision.__version__}')"
+python -c "import cv2; print(f'OpenCV version: {cv2.__version__}')"
+python -c "import numpy; print(f'NumPy version: {numpy.__version__}')"
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <h4>Important Notes:</h4>
+                <ul>
+                    <li>Choose the appropriate PyTorch installation based on your hardware</li>
+                    <li>Ensure you have sufficient disk space for the dataset and models</li>
+                    <li>For GPU training, ensure you have the latest drivers installed</li>
+                    <li>Virtual environment isolation prevents dependency conflicts</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="model-training">
+            <h2>6.6 Model Training</h2>
+
+            <h3>6.6.1 Basic Training</h3>
+            
+            <div class="step-box">
+                <h4>基础训练 (Basic Training)</h4>
+                <p>在terminal里面打 (Run in terminal):</p>
+                <div class="command-box">
+python train_garbage.py --dataset_path garbage_dataset
+                </div>
+            </div>
+
+            <h3>6.6.2 High-Quality Training</h3>
+            
+            <div class="step-box">
+                <h4>高质量训练 (High-Quality Training)</h4>
+                <p>使用之前我们学过的efficientnet_b3机器算法来做 (Using EfficientNet-B3 architecture):</p>
+                <div class="command-box">
+python train_garbage.py --dataset_path garbage_dataset --backbone efficientnet_b3 --batch_size 32 --num_epochs 50 --optimizer adamw --learning_rate 0.001 --weight_decay 1e-4 --loss_fn label_smoothing --smoothing 0.1 --lr_scheduler cosine --use_mixup --use_cutmix --balance_samples --early_stopping 10
+                </div>
+            </div>
+
+            <h3>6.6.3 Quick Training for Testing</h3>
+            
+            <div class="step-box">
+                <h4>快速训练，用于测试 (Quick Training for Testing)</h4>
+                <p>使用ResNet18进行快速验证 (Using ResNet18 for quick validation):</p>
+                <div class="command-box">
+python train_garbage.py --dataset_path garbage_dataset --backbone resnet18 --batch_size 16 --num_epochs 5 --num_workers 2
+                </div>
+            </div>
+
+            <h3>6.6.4 High-Performance Training</h3>
+            
+            <div class="step-box">
+                <h4>高性能训练 (High-Performance Training)</h4>
+                <p>有GPU和ResNet50的高性能训练 (High-performance training with GPU and ResNet50):</p>
+                <div class="command-box">
+python train_garbage.py --dataset_path garbage_dataset --backbone resnet50 --batch_size 64 --num_epochs 50 --use_amp --optimizer adamw --use_mixup --balance_samples
+                </div>
+            </div>
+
+            <h3>6.6.5 Mobile-Optimized Training</h3>
+            
+            <div class="step-box">
+                <h4>移动端优化训练 (Mobile-Optimized Training)</h4>
+                <p>如果你想把这个模型放入到你的手机里进行后续开发，那么我们可以用mobilenet_v2来训练一个轻量级的并且带有移动端优化的模型 (For mobile deployment, use MobileNet-V2 for lightweight optimization):</p>
+                <div class="command-box">
+python train_garbage.py --dataset_path garbage_dataset --backbone mobilenet_v2 --batch_size 32 --num_epochs 30 --img_size 224 --optimizer adamw
+                </div>
+            </div>
+
+            <h3>6.6.6 Maximum Accuracy Training</h3>
+            
+            <div class="step-box">
+                <h4>最高精度训练 (Maximum Accuracy Training)</h4>
+                <p>当然如果你有足够多的时间非常在意精准度可以运行 (If you have sufficient time and prioritize maximum accuracy):</p>
+                <div class="command-box">
+python train_garbage.py --dataset_path garbage_dataset --backbone efficientnet_b3 --batch_size 16 --num_epochs 100 --optimizer adamw --learning_rate 0.0001 --weight_decay 1e-4 --loss_fn label_smoothing --smoothing 0.1 --lr_scheduler cosine --use_mixup --use_cutmix --balance_samples --early_stopping 15 --gradient_accumulation 2
+                </div>
+            </div>
+
+            <div class="key-points">
+                <h4>Training Strategy Recommendations:</h4>
+                <ul>
+                    <li><strong>Beginner</strong>: Start with basic training to understand the process</li>
+                    <li><strong>Development</strong>: Use quick training for rapid iteration</li>
+                    <li><strong>Production</strong>: Use high-quality training for best results</li>
+                    <li><strong>Mobile</strong>: Use MobileNet-V2 for edge deployment</li>
+                    <li><strong>Research</strong>: Use maximum accuracy training for best performance</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="practical-implementation">
+            <h2>6.7 Practical Implementation</h2>
+
+            <h3>6.7.1 Training Monitoring</h3>
+            
+            <p>During training, monitor these key metrics:</p>
+
+            <div class="highlight-box">
+                <ul>
+                    <li><strong>Training Loss</strong>: Should decrease over time</li>
+                    <li><strong>Validation Loss</strong>: Should decrease but not overfit</li>
+                    <li><strong>Accuracy</strong>: Should increase toward target of 85%+</li>
+                    <li><strong>Learning Rate</strong>: Should adapt based on scheduler</li>
+                </ul>
+            </div>
+
+            <h3>6.7.2 Model Evaluation</h3>
+            
+            <p>After training, evaluate your model using:</p>
+
+            <div class="code-block">
+# Evaluate model performance
+python evaluate_model.py --model_path best_model_garbage_efficientnet_b3_adamw_label_smoothing.pth --dataset_path garbage_dataset
+
+# Generate confusion matrix
+python generate_confusion_matrix.py --model_path best_model_garbage_efficientnet_b3_adamw_label_smoothing.pth --dataset_path garbage_dataset
+            </div>
+
+            <h3>6.7.3 Deployment Considerations</h3>
+            
+            <div class="key-points">
+                <h4>Deployment Checklist:</h4>
+                <ul>
+                    <li>Model size optimization for target platform</li>
+                    <li>Inference speed testing</li>
+                    <li>Memory usage verification</li>
+                    <li>Accuracy validation on real-world data</li>
+                    <li>Integration testing with camera systems</li>
+                </ul>
+            </div>
+
+            <div class="summary-box">
+                <h3>Chapter Summary</h3>
+                <p>This hands-on project demonstrates the complete workflow from dataset preparation to model deployment. Key achievements include:</p>
+                
+                <ul>
+                    <li>Understanding real-world dataset organization and challenges</li>
+                    <li>Implementing various training strategies for different use cases</li>
+                    <li>Learning to balance accuracy, speed, and resource constraints</li>
+                    <li>Preparing models for practical deployment scenarios</li>
+                    <li>Building a complete AI application from theory to practice</li>
+                </ul>
+
+                <p>The intelligent waste classification system serves as an excellent example of how computer vision technology can address real-world environmental challenges while providing practical learning opportunities in deep learning and AI deployment.</p>
+            </div>
+        </section>
+
+        <div style="margin-top: 50px; padding-top: 20px; border-top: 2px solid #e74c3c; text-align: center; color: #7f8c8d;">
+            <p><strong>Chapter 6: Hands-On Project - Intelligent Waste Classification System</strong></p>
+            <p>Part of the Comprehensive Guide to Computer Vision and Deep Learning</p>
+        </div>
+    </div>
+</body>
+</html> 

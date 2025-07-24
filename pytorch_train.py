@@ -7,6 +7,7 @@ import copy
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import argparse
 
 import torch
 import torch.nn as nn
@@ -25,7 +26,7 @@ dataset_path = "garbage_dataset"
 train_dir = os.path.join(dataset_path, "TRAIN")
 test_dir = os.path.join(dataset_path, "TEST")
 
-# 定义模型参数
+# 定义模型参数 - 将被命令行参数覆盖
 IMG_SIZE = 299  # Xception的默认输入大小
 BATCH_SIZE = 32
 EPOCHS = 20
@@ -176,6 +177,88 @@ class Xception(nn.Module):
         
         return x
 
+# 定义简化版Xception架构
+class SimplifiedXception(nn.Module):
+    def __init__(self, num_classes=4):
+        super(SimplifiedXception, self).__init__()
+        
+        # 初始卷积层
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, stride=2, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(32)
+        self.relu = nn.ReLU(inplace=True)
+        
+        # 第二层卷积
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(64)
+        
+        # 中间流块（简化版）
+        self.block1 = nn.Sequential(
+            SeparableConv2d(64, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.2),
+            SeparableConv2d(128, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        )
+        
+        self.block2 = nn.Sequential(
+            SeparableConv2d(128, 256, kernel_size=3, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.3),
+            SeparableConv2d(256, 256, kernel_size=3, padding=1),
+            nn.BatchNorm2d(256),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        )
+        
+        self.block3 = nn.Sequential(
+            SeparableConv2d(256, 512, kernel_size=3, padding=1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.4),
+            SeparableConv2d(512, 512, kernel_size=3, padding=1),
+            nn.BatchNorm2d(512),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        )
+        
+        # 特征提取完成
+        self.conv3 = SeparableConv2d(512, 1024, kernel_size=3, padding=1)
+        self.bn3 = nn.BatchNorm2d(1024)
+        
+        # 全局池化和分类
+        self.global_pool = nn.AdaptiveAvgPool2d(1)
+        self.dropout = nn.Dropout(0.6)
+        self.fc = nn.Linear(1024, num_classes)
+    
+    def forward(self, x):
+        # 输入流
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = self.relu(x)
+        
+        # 特征提取
+        x = self.block1(x)
+        x = self.block2(x)
+        x = self.block3(x)
+        
+        # 特征完成
+        x = self.conv3(x)
+        x = self.bn3(x)
+        x = self.relu(x)
+        
+        # 分类
+        x = self.global_pool(x)
+        x = x.view(x.size(0), -1)
+        x = self.dropout(x)
+        x = self.fc(x)
+        
+        return x
+
 # 定义数据预处理和增强
 train_transforms = transforms.Compose([
     transforms.RandomResizedCrop(IMG_SIZE),
@@ -275,7 +358,7 @@ def evaluate(model, dataloader, criterion, device):
     return epoch_loss, epoch_acc.item()
 
 # 训练循环
-def train_model(model, train_loader, test_loader, criterion, optimizer, scheduler, num_epochs=25):
+def train_model(model, train_loader, test_loader, criterion, optimizer, scheduler, num_epochs=25, early_stopping=5):
     since = time.time()
     
     best_model_wts = copy.deepcopy(model.state_dict())
@@ -290,7 +373,7 @@ def train_model(model, train_loader, test_loader, criterion, optimizer, schedule
     }
     
     # 早停设置
-    patience = 5
+    patience = early_stopping
     early_stopping_counter = 0
     
     for epoch in range(num_epochs):
@@ -312,7 +395,8 @@ def train_model(model, train_loader, test_loader, criterion, optimizer, schedule
         history['val_acc'].append(val_acc)
         
         # 学习率调度
-        scheduler.step(val_acc)
+        if scheduler:
+            scheduler.step(val_acc)
         
         # 保存最佳模型
         if val_acc > best_acc:
@@ -343,30 +427,163 @@ def train_model(model, train_loader, test_loader, criterion, optimizer, schedule
     return model, history
 
 # 开始训练
-print("开始训练...")
-model, history = train_model(model, train_loader, test_loader, criterion, optimizer, scheduler, num_epochs=EPOCHS)
+def main():
+    # 解析命令行参数
+    parser = argparse.ArgumentParser(description='Train PyTorch Xception garbage classification model')
+    
+    # 模型参数
+    parser.add_argument('--backbone', type=str, default='xception', 
+                        choices=['xception', 'simplified_xception'],
+                        help='Xception variant')
+    parser.add_argument('--batch_size', type=int, default=32, help='Batch size')
+    parser.add_argument('--num_epochs', type=int, default=20, help='Number of epochs')
+    parser.add_argument('--learning_rate', type=float, default=0.001, help='Learning rate')
+    parser.add_argument('--img_size', type=int, default=299, help='Input image size')
+    
+    # 优化器
+    parser.add_argument('--optimizer', type=str, default='adam', 
+                        choices=['adam', 'adamw', 'sgd'], help='Optimizer')
+    parser.add_argument('--weight_decay', type=float, default=1e-4, help='Weight decay')
+    
+    # 学习率调度
+    parser.add_argument('--lr_scheduler', type=str, default='reduce_on_plateau',
+                        choices=['step', 'cosine', 'reduce_on_plateau', 'none'],
+                        help='Learning rate scheduler')
+    parser.add_argument('--lr_patience', type=int, default=2, help='LR scheduler patience')
+    parser.add_argument('--lr_factor', type=float, default=0.5, help='LR scheduler factor')
+    
+    # 训练选项
+    parser.add_argument('--early_stopping', type=int, default=5, help='Early stopping patience')
+    parser.add_argument('--num_workers', type=int, default=2, help='Number of data loading workers')
+    
+    # 数据集路径
+    parser.add_argument('--dataset_path', type=str, default='garbage_dataset', 
+                        help='Path to the dataset')
+    
+    args = parser.parse_args()
+    
+    # 更新全局变量
+    global IMG_SIZE, BATCH_SIZE, EPOCHS, LEARNING_RATE
+    IMG_SIZE = args.img_size
+    BATCH_SIZE = args.batch_size
+    EPOCHS = args.num_epochs
+    LEARNING_RATE = args.learning_rate
+    dataset_path = args.dataset_path
+    
+    print(f"训练配置:")
+    print(f"  骨干网络: {args.backbone}")
+    print(f"  批次大小: {args.batch_size}")
+    print(f"  训练轮数: {args.num_epochs}")
+    print(f"  学习率: {args.learning_rate}")
+    print(f"  图像尺寸: {args.img_size}")
+    print(f"  优化器: {args.optimizer}")
+    print(f"  学习率调度: {args.lr_scheduler}")
+    print(f"  早停耐心: {args.early_stopping}")
+    print(f"  数据集路径: {dataset_path}")
+    
+    # 定义数据集路径
+    train_dir = os.path.join(dataset_path, "TRAIN")
+    test_dir = os.path.join(dataset_path, "TEST")
+    
+    # 定义数据预处理和增强
+    train_transforms = transforms.Compose([
+        transforms.RandomResizedCrop(IMG_SIZE),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomRotation(15),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
 
-# 绘制训练结果
-plt.figure(figsize=(12, 5))
+    test_transforms = transforms.Compose([
+        transforms.Resize(IMG_SIZE + 32),
+        transforms.CenterCrop(IMG_SIZE),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
 
-plt.subplot(1, 2, 1)
-plt.plot(history['train_loss'], label='train')
-plt.plot(history['val_loss'], label='validation')
-plt.title('Model Loss')
-plt.xlabel('Epoch')
-plt.ylabel('Loss')
-plt.legend()
+    # 加载数据集
+    print("正在加载数据集...")
+    train_dataset = datasets.ImageFolder(train_dir, transform=train_transforms)
+    test_dataset = datasets.ImageFolder(test_dir, transform=test_transforms)
 
-plt.subplot(1, 2, 2)
-plt.plot(history['train_acc'], label='train')
-plt.plot(history['val_acc'], label='validation')
-plt.title('Model Accuracy')
-plt.xlabel('Epoch')
-plt.ylabel('Accuracy')
-plt.legend()
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=args.num_workers)
+    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=args.num_workers)
 
-plt.tight_layout()
-plt.savefig('pytorch_training_results.png')
-plt.show()
+    print(f"训练集大小: {len(train_dataset)}")
+    print(f"测试集大小: {len(test_dataset)}")
+    print(f"类别: {train_dataset.classes}")
 
-print("训练完成，结果已保存！") 
+    # 创建模型
+    print(f"正在创建{args.backbone}模型...")
+    if args.backbone == 'xception':
+        model = Xception(num_classes=len(train_dataset.classes))
+    elif args.backbone == 'simplified_xception':
+        model = SimplifiedXception(num_classes=len(train_dataset.classes))
+    else:
+        raise ValueError(f"不支持的骨干网络: {args.backbone}")
+    
+    model = model.to(device)
+
+    # 定义损失函数和优化器
+    criterion = nn.CrossEntropyLoss()
+    
+    if args.optimizer == 'adam':
+        optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=args.weight_decay)
+    elif args.optimizer == 'adamw':
+        optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=args.weight_decay)
+    elif args.optimizer == 'sgd':
+        optimizer = optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=0.9, weight_decay=args.weight_decay)
+    else:
+        raise ValueError(f"不支持的优化器: {args.optimizer}")
+
+    # 学习率调度器
+    if args.lr_scheduler == 'step':
+        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=args.lr_factor)
+    elif args.lr_scheduler == 'cosine':
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.num_epochs)
+    elif args.lr_scheduler == 'reduce_on_plateau':
+        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=args.lr_factor, patience=args.lr_patience, verbose=True)
+    else:  # 'none'
+        scheduler = None
+
+    # 开始训练
+    print("开始训练...")
+    model, history = train_model(model, train_loader, test_loader, criterion, optimizer, scheduler, num_epochs=args.num_epochs, early_stopping=args.early_stopping)
+
+    # 绘制训练结果
+    plt.figure(figsize=(12, 5))
+
+    plt.subplot(1, 2, 1)
+    plt.plot(history['train_loss'], label='train')
+    plt.plot(history['val_loss'], label='validation')
+    plt.title('Model Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    plt.subplot(1, 2, 2)
+    plt.plot(history['train_acc'], label='train')
+    plt.plot(history['val_acc'], label='validation')
+    plt.title('Model Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.savefig(f'{args.backbone}_pytorch_training_results.png')
+    plt.show()
+
+    # 保存最终模型
+    torch.save({
+        'epoch': args.num_epochs,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'backbone': args.backbone,
+        'class_names': train_dataset.classes
+    }, f'final_model_garbage_{args.backbone}_pytorch.pth')
+
+    print("训练完成，结果已保存！")
+
+if __name__ == "__main__":
+    main() 

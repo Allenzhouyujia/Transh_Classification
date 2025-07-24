@@ -11,6 +11,7 @@ from sklearn.metrics import confusion_matrix, classification_report, accuracy_sc
 import seaborn as sns
 import pandas as pd
 import random
+import argparse
 
 import torch
 import torch.nn as nn
@@ -26,10 +27,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else
                       "cpu")
 print(f"Using device: {device}")
 
-# Define dataset path
-dataset_path = "/Users/allenzhou/Downloads/garbage_classification"
-
-# Define model parameters
+# Define model parameters - will be overridden by command line arguments
 IMG_SIZE = 224
 BATCH_SIZE = 32
 EPOCHS = 50
@@ -43,6 +41,42 @@ np.random.seed(SEED)
 torch.manual_seed(SEED)
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(SEED)
+
+# Custom loss functions
+class LabelSmoothingLoss(nn.Module):
+    def __init__(self, classes, smoothing=0.1):
+        super(LabelSmoothingLoss, self).__init__()
+        self.confidence = 1.0 - smoothing
+        self.smoothing = smoothing
+        self.classes = classes
+        
+    def forward(self, pred, target):
+        pred = pred.log_softmax(dim=-1)
+        with torch.no_grad():
+            true_dist = torch.zeros_like(pred)
+            true_dist.fill_(self.smoothing / (self.classes - 1))
+            true_dist.scatter_(1, target.data.unsqueeze(1), self.confidence)
+        return torch.mean(torch.sum(-true_dist * pred, dim=-1))
+
+class FocalLoss(nn.Module):
+    def __init__(self, alpha=None, gamma=2.0, reduction='mean'):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.reduction = reduction
+        self.cross_entropy = nn.CrossEntropyLoss(weight=alpha, reduction='none')
+        
+    def forward(self, inputs, targets):
+        ce_loss = self.cross_entropy(inputs, targets)
+        pt = torch.exp(-ce_loss)
+        focal_loss = ((1 - pt) ** self.gamma) * ce_loss
+        
+        if self.reduction == 'mean':
+            return focal_loss.mean()
+        elif self.reduction == 'sum':
+            return focal_loss.sum()
+        else:
+            return focal_loss
 
 # Define SeparableConv2d module for Xception
 class SeparableConv2d(nn.Module):
@@ -452,7 +486,7 @@ def evaluate(model, dataloader, criterion, device):
     return epoch_loss, epoch_acc.item()
 
 # Improved training loop with validation set
-def train_model(model, train_loader, val_loader, test_loader, criterion, optimizer, scheduler, num_epochs=25):
+def train_model(model, train_loader, val_loader, test_loader, criterion, optimizer, scheduler, num_epochs=25, use_mixup=True, use_cutmix=False, mixup_alpha=0.2, early_stopping=8, use_amp=False):
     since = time.time()
     
     best_model_wts = copy.deepcopy(model.state_dict())
@@ -468,7 +502,7 @@ def train_model(model, train_loader, val_loader, test_loader, criterion, optimiz
     }
     
     # Early stopping settings
-    patience = 8
+    patience = early_stopping
     early_stopping_counter = 0
     
     # Mixed precision training
@@ -479,7 +513,7 @@ def train_model(model, train_loader, val_loader, test_loader, criterion, optimiz
         print('-' * 10)
         
         # Training phase
-        train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer, device, scaler)
+        train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer, device, scaler, use_mixup)
         print(f'Train Loss: {train_loss:.4f} Acc: {train_acc:.4f}')
         
         # Validation phase
@@ -501,7 +535,8 @@ def train_model(model, train_loader, val_loader, test_loader, criterion, optimiz
         history['val_acc'].append(val_acc)
         
         # Learning rate scheduler
-        scheduler.step(val_acc)
+        if scheduler:
+            scheduler.step(val_acc)
         
         # Save best model
         if val_acc > best_val_acc:
@@ -614,16 +649,94 @@ def test_model(model, test_loader, criterion, device, class_names):
 
 # Show memory usage
 def print_memory_usage():
-    import psutil
-    process = psutil.Process()
-    print(f"Memory usage: {process.memory_info().rss / (1024 * 1024):.2f} MB")
+    try:
+        import psutil
+        process = psutil.Process()
+        print(f"Memory usage: {process.memory_info().rss / (1024 * 1024):.2f} MB")
+    except ImportError:
+        print("Memory usage: psutil not available")
 
 def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Train Xception garbage classification model')
+    
+    # Model parameters
+    parser.add_argument('--backbone', type=str, default='efficientnet_b0', 
+                        choices=['efficientnet_b0', 'efficientnet_b3'],
+                        help='Backbone architecture')
+    parser.add_argument('--batch_size', type=int, default=32, help='Batch size')
+    parser.add_argument('--num_epochs', type=int, default=50, help='Number of epochs')
+    parser.add_argument('--learning_rate', type=float, default=1e-4, help='Learning rate')
+    parser.add_argument('--weight_decay', type=float, default=1e-4, help='Weight decay')
+    parser.add_argument('--img_size', type=int, default=224, help='Input image size')
+    
+    # Optimizer
+    parser.add_argument('--optimizer', type=str, default='adamw', 
+                        choices=['adam', 'adamw', 'sgd'], help='Optimizer')
+    
+    # Loss function
+    parser.add_argument('--loss_fn', type=str, default='cross_entropy', 
+                        choices=['cross_entropy', 'label_smoothing', 'focal_loss'],
+                        help='Loss function')
+    parser.add_argument('--smoothing', type=float, default=0.1, help='Label smoothing factor')
+    parser.add_argument('--focal_gamma', type=float, default=2.0, help='Focal loss gamma')
+    
+    # Learning rate scheduler
+    parser.add_argument('--lr_scheduler', type=str, default='reduce_on_plateau',
+                        choices=['step', 'cosine', 'reduce_on_plateau', 'none'],
+                        help='Learning rate scheduler')
+    parser.add_argument('--lr_patience', type=int, default=3, help='LR scheduler patience')
+    parser.add_argument('--lr_factor', type=float, default=0.5, help='LR scheduler factor')
+    
+    # Data augmentation
+    parser.add_argument('--use_mixup', action='store_true', help='Use mixup augmentation')
+    parser.add_argument('--use_cutmix', action='store_true', help='Use cutmix augmentation')
+    parser.add_argument('--mixup_alpha', type=float, default=0.2, help='Mixup alpha parameter')
+    
+    # Training options
+    parser.add_argument('--early_stopping', type=int, default=8, help='Early stopping patience')
+    parser.add_argument('--use_amp', action='store_true', help='Use mixed precision training')
+    parser.add_argument('--num_workers', type=int, default=4, help='Number of data loading workers')
+    parser.add_argument('--balance_samples', action='store_true', help='Balance class samples')
+    
+    # Dataset path
+    parser.add_argument('--dataset_path', type=str, default='garbage_dataset', 
+                        help='Path to the dataset')
+    
+    args = parser.parse_args()
+    
+    # Update global variables with command line arguments
+    global IMG_SIZE, BATCH_SIZE, EPOCHS, LEARNING_RATE, WEIGHT_DECAY
+    IMG_SIZE = args.img_size
+    BATCH_SIZE = args.batch_size
+    EPOCHS = args.num_epochs
+    LEARNING_RATE = args.learning_rate
+    WEIGHT_DECAY = args.weight_decay
+    dataset_path = args.dataset_path
+    
+    print(f"Training Configuration:")
+    print(f"  Backbone: {args.backbone}")
+    print(f"  Batch Size: {args.batch_size}")
+    print(f"  Epochs: {args.num_epochs}")
+    print(f"  Learning Rate: {args.learning_rate}")
+    print(f"  Weight Decay: {args.weight_decay}")
+    print(f"  Image Size: {args.img_size}")
+    print(f"  Optimizer: {args.optimizer}")
+    print(f"  Loss Function: {args.loss_fn}")
+    print(f"  LR Scheduler: {args.lr_scheduler}")
+    print(f"  Mixup: {args.use_mixup}")
+    print(f"  CutMix: {args.use_cutmix}")
+    print(f"  Early Stopping: {args.early_stopping}")
+    print(f"  Mixed Precision: {args.use_amp}")
+    print(f"  Balance Samples: {args.balance_samples}")
+    print(f"  Dataset Path: {dataset_path}")
+    
     # Load dataset
     print("Loading dataset...")
     
-    # Since the dataset isn't pre-split into train/test, we'll create a 70/15/15 train/val/test split
-    full_dataset = datasets.ImageFolder(root=dataset_path, transform=train_transforms)
+    # Load the training dataset from TRAIN folder
+    train_path = os.path.join(dataset_path, 'TRAIN')
+    full_dataset = datasets.ImageFolder(root=train_path, transform=train_transforms)
     class_names = full_dataset.classes
     print(f"Dataset classes: {class_names}")
     
@@ -681,8 +794,8 @@ def main():
     train_dataset = torch.utils.data.Subset(full_dataset, train_indices)
     
     # Create validation and test datasets with test transforms
-    val_full_dataset = datasets.ImageFolder(root=dataset_path, transform=test_transforms)
-    test_full_dataset = datasets.ImageFolder(root=dataset_path, transform=test_transforms)
+    val_full_dataset = datasets.ImageFolder(root=train_path, transform=test_transforms)
+    test_full_dataset = datasets.ImageFolder(root=train_path, transform=test_transforms)
     
     val_dataset = torch.utils.data.Subset(val_full_dataset, val_indices)
     test_dataset = torch.utils.data.Subset(test_full_dataset, test_indices)
@@ -692,30 +805,34 @@ def main():
     print(f"Test set size: {len(test_dataset)}")
     
     # Create weighted sampler for the training set
-    train_sampler = WeightedRandomSampler(
-        weights=[sample_weights[i] for i in train_indices],
-        num_samples=len(train_indices),
-        replacement=True
-    )
-    
-    # Adjust num_workers based on CPU cores
-    num_workers = min(4, multiprocessing.cpu_count())
-    print(f"Using {num_workers} worker processes")
-    
-    # Create data loaders
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=BATCH_SIZE,
-        sampler=train_sampler,
-        num_workers=num_workers,
-        pin_memory=True
-    )
+    if args.balance_samples:
+        train_sampler = WeightedRandomSampler(
+            weights=[sample_weights[i] for i in train_indices],
+            num_samples=len(train_indices),
+            replacement=True
+        )
+        train_loader = DataLoader(
+            train_dataset,
+            batch_size=BATCH_SIZE,
+            sampler=train_sampler,
+            num_workers=args.num_workers,
+            pin_memory=True
+        )
+        print("Using weighted random sampler for class balancing")
+    else:
+        train_loader = DataLoader(
+            train_dataset,
+            batch_size=BATCH_SIZE,
+            shuffle=True,
+            num_workers=args.num_workers,
+            pin_memory=True
+        )
     
     val_loader = DataLoader(
         val_dataset,
         batch_size=BATCH_SIZE,
         shuffle=False,
-        num_workers=num_workers,
+        num_workers=args.num_workers,
         pin_memory=True
     )
     
@@ -723,13 +840,22 @@ def main():
         test_dataset,
         batch_size=BATCH_SIZE,
         shuffle=False,
-        num_workers=num_workers,
+        num_workers=args.num_workers,
         pin_memory=True
     )
     
-    # Create model - choose transfer learning with pre-trained EfficientNet
-    print("Creating EfficientNet model with transfer learning...")
-    model = TransferLearningModel(num_classes=len(class_names), use_pretrained=True)
+    # Create model based on backbone choice
+    print(f"Creating {args.backbone} model with transfer learning...")
+    if args.backbone == 'efficientnet_b0':
+        model = TransferLearningModel(num_classes=len(class_names), use_pretrained=True)
+    elif args.backbone == 'efficientnet_b3':
+        # Create EfficientNet-B3 model
+        model = models.efficientnet_b3(pretrained=True)
+        num_features = model.classifier[1].in_features
+        model.classifier[1] = nn.Linear(num_features, len(class_names))
+    else:
+        raise ValueError(f"Unsupported backbone: {args.backbone}")
+    
     model = model.to(device)
     
     # Print model statistics
@@ -739,22 +865,45 @@ def main():
     print(f"Trainable parameters: {trainable_params:,}")
     print_memory_usage()
     
-    # Define weighted loss function based on class frequencies
-    class_counts = [class_samples[i] for i in range(len(class_names))]
-    class_weights = torch.FloatTensor([total_samples / (n_classes * count) for count in class_counts]).to(device)
-    criterion = nn.CrossEntropyLoss(weight=class_weights)
+    # Define loss function
+    if args.loss_fn == 'cross_entropy':
+        if args.balance_samples:
+            class_counts = [class_samples[i] for i in range(len(class_names))]
+            class_weights = torch.FloatTensor([total_samples / (n_classes * count) for count in class_counts]).to(device)
+            criterion = nn.CrossEntropyLoss(weight=class_weights)
+        else:
+            criterion = nn.CrossEntropyLoss()
+    elif args.loss_fn == 'label_smoothing':
+        criterion = LabelSmoothingLoss(classes=len(class_names), smoothing=args.smoothing)
+    elif args.loss_fn == 'focal_loss':
+        criterion = FocalLoss(alpha=None, gamma=args.focal_gamma)
+    else:
+        raise ValueError(f"Unsupported loss function: {args.loss_fn}")
     
-    # Define optimizer with weight decay
-    optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
+    # Define optimizer
+    if args.optimizer == 'adam':
+        optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
+    elif args.optimizer == 'adamw':
+        optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
+    elif args.optimizer == 'sgd':
+        optimizer = optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=0.9, weight_decay=WEIGHT_DECAY)
+    else:
+        raise ValueError(f"Unsupported optimizer: {args.optimizer}")
     
     # Learning rate scheduler
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, 
-        mode='max', 
-        factor=0.5, 
-        patience=3, 
-        verbose=True
-    )
+    if args.lr_scheduler == 'step':
+        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=args.lr_factor)
+    elif args.lr_scheduler == 'cosine':
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.num_epochs)
+    elif args.lr_scheduler == 'reduce_on_plateau':
+        scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, 
+            mode='max', 
+            factor=args.lr_factor, 
+            patience=args.lr_patience
+        )
+    else:  # 'none'
+        scheduler = None
     
     # Start training
     print("Starting training...")
@@ -766,7 +915,12 @@ def main():
         criterion, 
         optimizer, 
         scheduler, 
-        num_epochs=EPOCHS
+        num_epochs=args.num_epochs,
+        use_mixup=args.use_mixup,
+        use_cutmix=args.use_cutmix,
+        mixup_alpha=args.mixup_alpha,
+        early_stopping=args.early_stopping,
+        use_amp=args.use_amp
     )
     
     # Plot training results
@@ -793,27 +947,40 @@ def main():
     plt.legend()
     
     plt.tight_layout()
-    plt.savefig('efficientnet_training_results.png')
+    plt.savefig(f'{args.backbone}_training_results.png')
     
     # Final model evaluation
     print("\nStarting final model evaluation...")
     test_results = test_model(model, test_loader, criterion, device, class_names)
     
-    # Save final model
+    # Save final model with backbone information
     torch.save({
-        'epoch': EPOCHS,
+        'epoch': args.num_epochs,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'test_accuracy': test_results['accuracy'],
         'class_accuracy': test_results['class_accuracy'],
-    }, 'final_model_garbage_xception.pth')
+        'backbone': args.backbone,
+        'class_names': class_names
+    }, f'final_model_garbage_{args.backbone}.pth')
+    
+    # Save best model
+    torch.save({
+        'epoch': args.num_epochs,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'test_accuracy': test_results['accuracy'],
+        'class_accuracy': test_results['class_accuracy'],
+        'backbone': args.backbone,
+        'class_names': class_names
+    }, f'best_model_garbage_{args.backbone}.pth')
     
     print("Model training and evaluation complete!")
     print(f"Overall test accuracy: {test_results['accuracy']:.4f}")
     print("Class accuracies:")
     for class_name, acc in test_results['class_accuracy'].items():
         print(f"  {class_name}: {acc:.4f}")
-    print("\nResults charts saved: efficientnet_training_results.png, confusion_matrix.png, class_accuracy.png")
+    print(f"\nResults charts saved: {args.backbone}_training_results.png, confusion_matrix.png, class_accuracy.png")
 
 if __name__ == '__main__':
     # Solve multiprocessing issues
